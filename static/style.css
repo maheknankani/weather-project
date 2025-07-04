@@ -1,0 +1,74 @@
+/* Custom styles for weather prediction app */
+.custom-progress {
+    height: 20px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.custom-progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.confidence-high {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.confidence-medium {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+}
+
+.confidence-low {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.weather-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.weather-icon.rain {
+    color: #3498db;
+}
+
+.weather-icon.sun {
+    color: #f1c40f;
+}
+
+.seasonal-info {
+    background-color: rgba(52, 152, 219, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.prediction-card {
+    transition: all 0.3s ease;
+}
+
+.prediction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.model-performance {
+    background: rgba(67, 97, 238, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.weather-stat {
+    padding: 1rem;
+    border-radius: 12px;
+    background: white;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.weather-stat i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+} 

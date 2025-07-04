@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    pre code {
+        white-space: pre;
+        display: block;
+        overflow-x: auto;
+        font-size: 0.875rem;
+        font-family: monospace;
+        min-width: 500px;  
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 0.5rem;
+    }
+
+    .stat-item pre {
+        margin: 0;
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    .card {
+        height: fit-content;
+        break-inside: avoid;
+    }
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .animation-delay-1 { animation-delay: 0.1s; }
+    .animation-delay-2 { animation-delay: 0.2s; }
+    .animation-delay-3 { animation-delay: 0.3s; }
+    .animation-delay-4 { animation-delay: 0.4s; }
+    .animation-delay-5 { animation-delay: 0.5s; }
+
+    .model-card {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .model-metric {
+        background: rgba(67, 97, 238, 0.05);
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .model-metric h5 {
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .mlp-architecture {
+        padding: 1rem;
+        background: rgba(67, 97, 238, 0.05);
+        border-radius: 0.5rem;
+        text-align: center;
+    }
+
+    .mlp-layer {
+        display: inline-block;
+        margin: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: white;
+        border-radius: 0.25rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card .card-body img.img-fluid {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 100%;
+        height: auto;
+    }
+    .card.confusion-matrix-card .card-body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 400px;
+    }
+
+    .city-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .city-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+    .model-performance {
+        background: rgba(67, 97, 238, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .weather-stat {
+        padding: 1rem;
+        border-radius: 12px;
+        background: white;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .weather-stat i {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+    }
+</style>
+
+<div class="row">
+    <!-- City Selection -->
+    <div class="col-md-3">
+        <div class="card shadow-lg mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-city me-2"></i>Cities</h4>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for city_key, city_data in cities.items() %}
+                    <a href="{{ url_for('dashboard', city=city_key) }}" 
+                       class="list-group-item list-group-item-action {% if city_key == selected_city %}active{% endif %}">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        {{ city_data.name }}
+                        <small class="d-block text-muted">{{ city_data.description }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-lg mb-4">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Weather Stats</h4>
+            </div>
+            <div class="card-body">
+                <div class="weather-stat d-flex align-items-center">
+                    <i class="fas fa-temperature-high me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Temperature</h6>
+                        <h4 class="mb-0">{{ weather_stats.temperature|round(1) }}°C</h4>
+                    </div>
+                </div>
+                <div class="weather-stat d-flex align-items-center">
+                    <i class="fas fa-tint me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Humidity</h6>
+                        <h4 class="mb-0">{{ weather_stats.humidity|round(1) }}%</h4>
+                    </div>
+                </div>
+                <div class="weather-stat d-flex align-items-center">
+                    <i class="fas fa-wind me-3"></i>
+                    <div>
+                        <h6 class="mb-0">Wind Speed</h6>
+                        <h4 class="mb-0">{{ weather_stats.wind_speed|round(1) }} km/h</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9">
+        <div class="card shadow-lg mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Model Performance for {{ cities[selected_city].name }}
+                </h4>
+            </div>
+            <div class="card-body">
+            {% if charts.accuracy_comparison %}
+                <div class="model-performance">
+                    <h5 class="text-primary mb-3">Model Accuracy Comparison</h5>
+                    <img src="data:image/png;base64,{{ charts.accuracy_comparison }}" 
+                         alt="Model Accuracy Comparison"
+                         class="img-fluid rounded">
+                </div>
+                {% endif %}
+                <div class="row">
+                    {% for model_name in ['knn', 'decision_tree', 'mlp'] %}
+                    {% if charts[model_name + '_importance'] %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    {% if model_name == 'knn' %}
+                                    <i class="fas fa-network-wired me-2"></i>
+                                    KNN
+                                    {% elif model_name == 'decision_tree' %}
+                                    <i class="fas fa-tree me-2"></i>
+                                    Decision Tree
+                                    {% else %}
+                                    <i class="fas fa-brain me-2"></i>
+                                    Neural Network
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <img src="data:image/png;base64,{{ charts[model_name + '_importance'] }}" 
+                                     alt="{{ model_name }} Feature Importance"
+                                     class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="row mt-4">
+                    {% for model_name in ['knn', 'decision_tree', 'mlp'] %}
+                    {% if charts[model_name + '_confusion_matrix'] %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    {% if model_name == 'knn' %}
+                                    <i class="fas fa-network-wired me-2"></i>
+                                    KNN Confusion Matrix
+                                    {% elif model_name == 'decision_tree' %}
+                                    <i class="fas fa-tree me-2"></i>
+                                    Decision Tree Confusion Matrix
+                                    {% else %}
+                                    <i class="fas fa-brain me-2"></i>
+                                    Neural Network Confusion Matrix
+                                    {% endif %}
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <img src="data:image/png;base64,{{ charts[model_name + '_confusion_matrix'] }}" 
+                                     alt="{{ model_name }} Confusion Matrix"
+                                     class="img-fluid rounded">
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

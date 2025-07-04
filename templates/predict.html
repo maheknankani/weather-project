@@ -1,0 +1,313 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/predict.css') }}">
+
+<div class="row justify-content-center fade-in">
+    <div class="col-md-4">
+        <div class="card shadow-lg mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-cloud-sun-rain me-2"></i>
+                    Weather Prediction
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="city-display">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    {{ cities[selected_city].name }} Weather Forecast
+                </div>
+
+                <div class="seasonal-info mb-4">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Seasonal Context
+                    </h5>
+                    <p class="mb-0">
+                        {% set current_month = input_data.month|default(none) if input_data else none %}
+                        {% if current_month in cities[selected_city].monsoon_months %}
+                        Currently in monsoon season (higher chance of rain)
+                        {% elif current_month in cities[selected_city].dry_months %}
+                        Currently in dry season (lower chance of rain)
+                        {% else %}
+                        Currently in transition season (moderate chance of rain)
+                        {% endif %}
+                    </p>
+                </div>
+
+                <form method="GET" action="{{ url_for('predict') }}" class="mb-4">
+                    <div class="mb-4">
+                        <label for="city" class="form-label">
+                            <i class="fas fa-city me-2"></i>
+                            Select City
+                        </label>
+                        <select class="form-select" id="city" name="city" onchange="this.form.submit()">
+                            {% for city_key, city_data in cities.items() %}
+                            <option value="{{ city_key }}" {% if city_key == selected_city %}selected{% endif %}>
+                                {{ city_data.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+
+                {% if ranges %}
+                <form method="POST" action="{{ url_for('predict', city=selected_city) }}" class="needs-validation" novalidate>
+                    <input type="hidden" name="city" value="{{ selected_city }}">
+
+                    <div class="mb-4">
+                        <label for="temperature" class="form-label">
+                            <i class="fas fa-temperature-high me-2"></i>
+                            Temperature (°C)
+                        </label>
+                        <input type="number" step="0.1" class="form-control" id="temperature" name="temperature"
+                            min="{{ ranges.temperature.min }}" max="{{ ranges.temperature.max }}"
+                            value="{{ input_data.temperature if input_data else (ranges.temperature.min + ranges.temperature.max) / 2 }}"
+                            required>
+                        <div class="form-text text-muted">
+                            Range: {{ ranges.temperature.min|round(1) }}°C to {{ ranges.temperature.max|round(1) }}°C
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="humidity" class="form-label">
+                            <i class="fas fa-tint me-2"></i>
+                            Humidity (%)
+                        </label>
+                        <input type="number" step="0.1" class="form-control" id="humidity" name="humidity"
+                            min="{{ ranges.humidity.min }}" max="{{ ranges.humidity.max }}"
+                            value="{{ input_data.humidity if input_data else (ranges.humidity.min + ranges.humidity.max) / 2 }}"
+                            required>
+                        <div class="form-text text-muted">
+                            Range: {{ ranges.humidity.min|round(1) }}% to {{ ranges.humidity.max|round(1) }}%
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="pressure" class="form-label">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Pressure (hPa)
+                        </label>
+                        <input type="number" step="0.1" class="form-control" id="pressure" name="pressure"
+                            min="{{ ranges.pressure.min }}" max="{{ ranges.pressure.max }}"
+                            value="{{ input_data.pressure if input_data else (ranges.pressure.min + ranges.pressure.max) / 2 }}"
+                            required>
+                        <div class="form-text text-muted">
+                            Range: {{ ranges.pressure.min|round(1) }} to {{ ranges.pressure.max|round(1) }} hPa
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="wind_speed" class="form-label">
+                            <i class="fas fa-wind me-2"></i>
+                            Wind Speed (km/h)
+                        </label>
+                        <input type="number" step="0.1" class="form-control" id="wind_speed" name="wind_speed"
+                            min="{{ ranges.wind_speed.min }}" max="{{ ranges.wind_speed.max }}"
+                            value="{{ input_data.wind_speed if input_data else (ranges.wind_speed.min + ranges.wind_speed.max) / 2 }}"
+                            required>
+                        <div class="form-text text-muted">
+                            Range: {{ ranges.wind_speed.min|round(1) }} to {{ ranges.wind_speed.max|round(1) }} km/h
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="cloud_cover" class="form-label">
+                            <i class="fas fa-cloud me-2"></i>
+                            Cloud Cover (%)
+                        </label>
+                        <input type="number" step="1" class="form-control" id="cloud_cover" name="cloud_cover"
+                            min="{{ ranges.cloud_cover.min }}" max="{{ ranges.cloud_cover.max }}"
+                            value="{{ input_data.cloud_cover if input_data else 50 }}"
+                            required>
+                        <div class="form-text text-muted">
+                            Range: {{ ranges.cloud_cover.min }}% to {{ ranges.cloud_cover.max }}%
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-magic me-2"></i>
+                        Predict Weather
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if predictions %}
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-12 mb-4">
+                <div class="card shadow-lg fade-in">
+                    <div class="card-body text-center py-3">
+                        <h3 class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            Weather Prediction Results for {{ cities[selected_city].name }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            {% for model_name, prediction in predictions.items() %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-lg h-100 fade-in prediction-card animation-delay-{{ loop.index }}">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            {% if model_name == 'knn' %}
+                            <i class="fas fa-network-wired me-2"></i>
+                            {% elif model_name == 'decision_tree' %}
+                            <i class="fas fa-tree me-2"></i>
+                            {% else %}
+                            <i class="fas fa-brain me-2"></i>
+                            {% endif %}
+                            {{ model_name|replace('_', ' ')|title }} Model
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center">
+                            <div class="weather-icon mb-3">
+                                {% if prediction.prediction == 'Rain' %}
+                                <i class="fas fa-cloud-rain fa-3x text-primary"></i>
+                                {% else %}
+                                <i class="fas fa-sun fa-3x text-warning"></i>
+                                {% endif %}
+                            </div>
+                            <h3 class="mb-3">{{ prediction.prediction }}</h3>
+                            <div class="progress mb-3 custom-progress">
+                                <div class="progress-bar confidence-{{ prediction.confidence_level|lower }}"
+                                    role="progressbar"
+                                    style="width: {{ prediction.probability }}%"
+                                    aria-valuenow="{{ prediction.probability }}"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100">
+                                    {{ prediction.probability|round(1) }}%
+                                </div>
+                            </div>
+                            <p class="text-muted mb-2">Confidence Level: {{ prediction.confidence_level }}</p>
+                        </div>
+
+                        {% if model_name == 'knn' and prediction.visualizations.similar_patterns %}
+                        <div class="mt-4">
+                            <h5 class="text-primary">Similar Historical Patterns</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Similarity</th>
+                                            <th>Temp (°C)</th>
+                                            <th>Humidity (%)</th>
+                                            <th>Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for pattern in prediction.visualizations.similar_patterns %}
+                                        <tr>
+                                            <td>{{ "%.1f"|format(pattern.similarity) }}%</td>
+                                            <td>{{ "%.1f"|format(pattern.temperature) }}</td>
+                                            <td>{{ "%.1f"|format(pattern.humidity) }}</td>
+                                            <td>
+                                                {% if pattern.rain_tomorrow == 1 %}
+                                                <i class="fas fa-cloud-rain text-primary"></i>
+                                                {% else %}
+                                                <i class="fas fa-sun text-warning"></i>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if model_name == 'decision_tree' and prediction.visualizations.decision_path %}
+                        <div class="mt-4">
+                            <h5 class="text-primary">Decision Path</h5>
+                            <div class="decision-path">
+                                {% for decision in prediction.visualizations.decision_path %}
+                                <div class="decision-step">
+                                    <i class="fas fa-arrow-right text-muted"></i>
+                                    <span class="feature">{{ decision.feature|title }}</span>
+                                    <span class="value">{{ decision.value }}</span>
+                                    <span class="operator">{{ decision.sign }}</span>
+                                    <span class="threshold">{{ decision.threshold }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if model_name == 'mlp' and prediction.visualizations.layer_activations %}
+                        <div class="mt-4">
+                            <h5 class="text-primary">Neural Network Analysis</h5>
+                            <div class="layer-activations">
+                                {% for layer in prediction.visualizations.layer_activations %}
+                                <div class="layer-info">
+                                    <h6>Layer {{ layer.layer }}</h6>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-info" 
+                                             role="progressbar" 
+                                             style="width: {{ (layer.avg_activation * 100)|round }}%">
+                                            {{ layer.active_neurons }} / {{ layer.neurons }} neurons active
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        Avg. Activation: {{ layer.avg_activation }}
+                                        <br>
+                                        Max. Activation: {{ layer.max_activation }}
+                                    </small>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            {% if charts %}
+            <div class="col-12 mt-4">
+                <div class="card shadow-lg fade-in animation-delay-4">
+                    <div class="card-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Prediction Analysis
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% if charts.prediction_comparison %}
+                            <div class="col-md-6 mb-4">
+                                <h5 class="text-primary mb-3">Model Comparison</h5>
+                                <img src="data:image/png;base64,{{ charts.prediction_comparison }}" 
+                                     alt="Prediction Comparison"
+                                     class="img-fluid rounded">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var forms = document.querySelectorAll('.needs-validation');
+    Array.prototype.slice.call(forms).forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+});
+</script>
+{% endblock %} 

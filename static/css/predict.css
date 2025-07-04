@@ -1,0 +1,151 @@
+.custom-progress {
+    height: 25px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+.custom-progress .progress-bar {
+    height: 100%;
+    transition: width 0.6s ease;
+    border-radius: 10px;
+}
+.city-display {
+    text-align: center;
+    padding: 1rem;
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    background: var(--gradient-primary);
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.single-class-notice {
+    background-color: rgba(67, 97, 238, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    border: 1px solid rgba(67, 97, 238, 0.2);
+}
+.weather-explanation {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    border: 1px solid rgba(67, 97, 238, 0.2);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+.weather-explanation h5 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+.weather-explanation ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+}
+.weather-explanation li {
+    margin-bottom: 0.5rem;
+}
+.custom-progress .confidence-high {
+    background-color: #28a745;
+}
+.custom-progress .confidence-medium {
+    background-color: #ffc107;
+}
+.custom-progress .confidence-low {
+    background-color: #dc3545;
+}
+.seasonal-info {
+    background-color: rgba(52, 152, 219, 0.1);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+.prediction-card {
+    transition: transform 0.3s ease;
+}
+.prediction-card:hover {
+    transform: translateY(-5px);
+}
+.weather-icon {
+    font-size: 2.5rem;
+}
+.progress-bar {
+    line-height: 25px;
+    font-weight: bold;
+}
+.table-responsive {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+/* Animation delays for cards */
+.animation-delay-1 { animation-delay: 0.1s; }
+.animation-delay-2 { animation-delay: 0.2s; }
+.animation-delay-3 { animation-delay: 0.3s; }
+
+/* Decision Tree Path Styling */
+.decision-path {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.decision-step {
+    margin: 10px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.decision-step .feature {
+    font-weight: bold;
+    color: #4361ee;
+}
+
+.decision-step .operator {
+    color: #6c757d;
+    font-family: monospace;
+}
+
+.decision-step .value,
+.decision-step .threshold {
+    font-family: monospace;
+    background-color: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Neural Network Layer Styling */
+.layer-activations {
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+
+.layer-info {
+    margin: 15px 0;
+    padding: 10px;
+    border-radius: 4px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.layer-info h6 {
+    color: #4361ee;
+    margin-bottom: 10px;
+}
+
+.layer-info .progress {
+    height: 20px;
+    border-radius: 10px;
+} 
